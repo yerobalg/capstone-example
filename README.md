@@ -1,5 +1,5 @@
 # capstone-example
-Backend App Example for Bangkit Capstone Project
+Backend App Example for Bangkit Capstone Project Reference
 
 How to use
 1. Clone this repository
