@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Breel Dummy Login</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto"
+      rel="stylesheet"
+    />
+    <link rel="icon" href="data:," />
+  </head>
+  <body style="font-family: Roboto; text-align: center">
+    <!-- Track / Display User status -->
+    <button id="sign-out" style="display: none">Sign Out</button>
+    <div>
+      Status: <strong><span id="sign-in-status">Loading...</span></strong>
+    </div>
+    <br />
+    <div id="sign-in-container" style="display: block">
+      <input type="email" placeholder="email" id="email" />
+      <br />
+      <br />
+
+      <input type="password" placeholder="password" id="password" />
+      <br />
+      <br />
+
+      <button id="sign-in" onclick="login()">Sign in</button>
+      <p>Or</p>
+      <button id="google-sign-in" onclick="signInWithGoogle()">
+        Sign in with Google
+      </button>
+      <br /><br />
+    </div>
+    <br />
+    <div>
+      Access Token: <br /><textarea
+        id="access-token"
+        rows="5"
+        cols="75"
+      ></textarea>
+    </div>
+    <button onclick="copyTextarea()">Copy Access Token</button
+    ><br /><br /><br />
+    <div>
+      User Info: <br /><textarea
+        id="account-details"
+        rows="20"
+        cols="75"
+      ></textarea>
+    </div>
+
+    <button onclick="signOutHandler()" id="sign-out">Sign Out</button>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "<%- apiKey %>",
+        authDomain: "<%- authDomain %>",
+        projectId: "<%- projectID %>",
+        storageBucket: "<%- storageBucket %>",
+        messagingSenderId: "<%- messagingSenderID %>",
+        appId: "<%- appID %>",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      window.app = app;
+    </script>
+
+    <script type="module">
+      import {
+        getAuth,
+        signInWithEmailAndPassword,
+        signOut,
+        onAuthStateChanged,
+        signInWithPopup,
+        GoogleAuthProvider,
+      } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+
+      const auth = getAuth();
+
+      function setupAuth() {
+        var statusElem = document.querySelector("#sign-in-status"),
+          tokenElem = document.querySelector("#access-token"),
+          detailsElem = document.querySelector("#account-details"),
+          loginElem = document.getElementById("sign-in-container");
+        onAuthStateChanged(
+          auth,
+          function (user) {
+            if (user) {
+              // User is signed in.
+              user.getIdToken(true).then(function (accessToken) {
+                statusElem.textContent = "Signed in";
+                statusElem.style.color = "green";
+                tokenElem.textContent = accessToken;
+                detailsElem.value = JSON.stringify(user, null, "  ");
+                loginElem.style.display = "none";
+              });
+            } else {
+              // User is signed out.
+              statusElem.textContent = "Signed out";
+              statusElem.style.color = "red";
+              tokenElem.textContent = "no user access token";
+              detailsElem.value = "no user details";
+            }
+          },
+          function (error) {
+            alert(error);
+          }
+        );
+      }
+
+      function login() {
+        const email = document.getElementById("email").value,
+          password = document.getElementById("password").value;
+
+        if (email == "" || password == "") {
+          alert("email and password cannot be empty");
+          return;
+        }
+
+        signInWithEmailAndPassword(auth, email, password)
+          .then(function (result) {
+            // Reload the current page to load index.html
+            location.reload();
+          })
+          .catch(function (error) {
+            alert(error.message);
+          });
+      }
+
+      function signOutHandler() {
+        signOut(auth)
+          .then(function () {
+            // Sign-out successful.
+            location.reload();
+          })
+          .catch(function (error) {
+            // An error happened.
+            alert(error.message);
+          });
+      }
+
+      function signInWithGoogle() {
+        const provider = new GoogleAuthProvider();
+        signInWithPopup(auth, provider)
+          .then(function (result) {
+            // Reload the current page to load index.html
+            location.reload();
+          })
+          .catch(function (error) {
+            alert(error.message);
+          });
+      }
+
+      function copyTextArea() {
+        var copyText = document.getElementById("access-token");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+      }
+
+      // must be called before the ui initialization below -->
+      setupAuth();
+
+      window.login = login;
+      window.signOutHandler = signOutHandler;
+      window.signInWithGoogle = signInWithGoogle;
+      window.copyTextarea = copyTextArea;
+    </script>
+  </body>
+</html>
